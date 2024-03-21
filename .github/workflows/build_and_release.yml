@@ -1,0 +1,54 @@
+name: Build and release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+            extension: ''
+          - os: macos-latest
+            name: macos
+            extension: ''
+          - os: windows-latest
+            name: windows
+            extension: .exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Get tag name
+        id: tag
+        shell: bash
+        run: |
+          echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Get release
+        id: get_release_info
+        uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.tag.outputs.SOURCE_TAG }}
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22.1'
+      - name: Install dependencies
+        run: go get .
+      - name: build
+        run: go build  -o ./build/
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: build/tag${{ matrix.extension }}
+          asset_name: tag-${{ steps.tag.outputs.SOURCE_TAG }}-${{ matrix.name }}${{ matrix.extension }}
+          asset_content_type: application/octet-stream
