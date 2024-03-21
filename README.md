@@ -42,3 +42,7 @@ and trying to figure out what was the last version released? say no more!
 
 ![demo.gif](demo.gif)
 
+
+## Build
+
+go build -o ./build/
