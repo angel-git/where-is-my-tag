@@ -23,8 +23,16 @@ func main() {
 
 	huh.NewInput().
 		Title("What's the prefix of your tags?").
-		Description("ie: if your tag is v1.0.0, prefix is `v`").
+		Description("ie: if your tag is v21.0.0, prefix is `v`").
 		Value(&prefix).
+		Run()
+
+	var filter string
+
+	huh.NewInput().
+		Title("Any version you would like to filter?").
+		Description("ie: 21.").
+		Value(&filter).
 		Run()
 
 	tags, err := getGitTags()
@@ -43,6 +51,11 @@ func main() {
 			continue
 		}
 		versionString := line[len(prefix):]
+
+		if !strings.HasPrefix(versionString, filter) {
+			continue
+		}
+
 		version, err := semver.Parse(versionString)
 		if err != nil {
 			continue
